@@ -139,22 +139,25 @@ html, body {
 .rest-rate { font-weight: 800; font-size: 15px; color: var(--violet-2); }
 
 /* My cards */
-.my-cards-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.my-cards-list { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; }
 
 .mycard-row {
-  border-radius: 18px; padding: 16px 18px;
+  border-radius: 14px; padding: 10px 14px;
   background: linear-gradient(120deg, var(--g1), var(--g2));
-  box-shadow: 0 10px 26px -14px rgba(0,0,0,0.55);
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  box-shadow: 0 6px 16px -10px rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   cursor: pointer; transition: transform .12s ease;
 }
 .mycard-row:active { transform: scale(0.985); }
-.mycard-row-name { font-weight: 800; font-size: 16px; flex: 1; min-width: 0; }
-.mycard-row-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-.mycard-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 34px; }
-.mycard-stat-icon { font-size: 16px; }
-.mycard-stat-rate { font-size: 13px; font-weight: 800; }
-.chevron { font-size: 22px; opacity: 0.75; transform: rotate(90deg); transition: transform .2s ease; }
+.mycard-row-name {
+  font-weight: 700; font-size: 14px; flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mycard-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.mycard-stat { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 26px; }
+.mycard-stat-icon { font-size: 13px; line-height: 1.2; }
+.mycard-stat-rate { font-size: 11px; font-weight: 800; line-height: 1.2; }
+.chevron { font-size: 17px; opacity: 0.7; transform: rotate(90deg); transition: transform .2s ease; }
 .mycard-row.open .chevron { transform: rotate(-90deg); }
 
 .mycard-detail {
