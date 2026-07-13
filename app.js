@@ -479,9 +479,22 @@ function init() {
 
   renderHome();
   renderCardsScreen();
+  applyCategoryFromURL();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+}
+
+// Soporte para atajos de Apple Shortcuts (automatización "Al llegar" por categoría de lugar):
+// abrir kado-app.onrender.com/?cat=groceries salta directo al resultado de esa categoría.
+function applyCategoryFromURL() {
+  const cat = new URLSearchParams(location.search).get('cat');
+  if (!cat || !CATEGORIES.find(c => c.id === cat)) return;
+  pendingCategory = cat;
+  setTab('home');
+  const chip = $(`.chip[data-cat="${cat}"]`);
+  if (chip) { $$('.chip').forEach(b => b.classList.remove('active')); chip.classList.add('active'); }
+  renderResult(cat);
 }
 document.addEventListener('DOMContentLoaded', init);
