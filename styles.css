@@ -111,6 +111,22 @@ html, body {
   border-color: transparent;
 }
 
+/* Lista de categorías (estilo "Pointers"): cada fila ya muestra la mejor tarjeta */
+.pointer-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+.pointer-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--panel-border); color: var(--text);
+  border-radius: 14px; padding: 11px 14px; width: 100%; text-align: left;
+  font-family: inherit; cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.pointer-row.active { border-color: var(--violet); background: rgba(139,92,246,0.14); }
+.pointer-icon { font-size: 19px; flex-shrink: 0; }
+.pointer-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pointer-cat-name { font-weight: 700; font-size: 14px; }
+.pointer-card-name { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pointer-rate { font-weight: 800; font-size: 14.5px; color: var(--violet-2); flex-shrink: 0; }
+.pointer-row .chevron { flex-shrink: 0; }
+
 .hint { color: var(--text-dim); font-size: 14.5px; line-height: 1.5; padding: 10px 4px; }
 
 /* Result / spotlight */
@@ -123,7 +139,7 @@ html, body {
 }
 @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
 .spotlight-label { font-size: 13px; font-weight: 700; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px; }
-.spotlight-card { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 0 6px; }
+.spotlight-card { display: flex; align-items: baseline; justify-content: space-between; margin: 10px 0 6px; cursor: pointer; }
 .spotlight-name { font-size: 20px; font-weight: 800; }
 .spotlight-rate { font-size: 30px; font-weight: 800; }
 .spotlight-why { font-size: 13.5px; opacity: 0.9; }
@@ -137,7 +153,7 @@ html, body {
 .rest-row {
   display: flex; align-items: center; gap: 12px;
   background: var(--panel); border: 1px solid var(--panel-border);
-  border-radius: 14px; padding: 12px 14px;
+  border-radius: 14px; padding: 12px 14px; cursor: pointer;
 }
 .rest-swatch { width: 30px; height: 20px; border-radius: 6px; flex-shrink: 0; }
 .rest-name { flex: 1; font-size: 14.5px; font-weight: 600; }
@@ -197,6 +213,11 @@ html, body {
 .credit-add-row { display: grid; grid-template-columns: 1.4fr 0.8fr 1fr auto; gap: 6px; margin-top: 8px; }
 .text-input.tiny { padding: 9px 10px; font-size: 13px; margin-bottom: 0; }
 .btn-secondary.tiny { padding: 9px 12px; margin-top: 0; width: auto; font-size: 15px; font-weight: 800; }
+
+/* Modal: detalle de tarjeta */
+.carddetail-hero { border-radius: 18px; padding: 18px; color: #fff; }
+.carddetail-name { font-size: 19px; font-weight: 800; }
+.carddetail-issuer { font-size: 13px; opacity: 0.9; margin-top: 4px; }
 
 /* Promos */
 .promo-alert { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }

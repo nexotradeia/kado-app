@@ -149,6 +149,7 @@ function renderHome() {
   empty.classList.add('hidden');
   searchWrap.classList.remove('hidden');
   renderPromoBanner();
+  renderPointerList();
   renderResult(pendingCategory);
 }
 
@@ -165,20 +166,44 @@ function renderPromoBanner() {
   }).join('')}</div>`;
 }
 
-function renderCategoryChips() {
-  const wrap = $('#category-chips');
-  wrap.innerHTML = CATEGORIES.map(c =>
-    `<button class="chip" data-cat="${c.id}"><span>${c.icon}</span>${c.label}</button>`
-  ).join('');
-  wrap.addEventListener('click', e => {
-    const btn = e.target.closest('.chip');
-    if (!btn) return;
-    $$('.chip', wrap).forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    pendingCategory = btn.dataset.cat;
+// Devuelve la mejor tarjeta (respetando fijadas) para una categoría, ya rankeada.
+function rankForCategory(categoryId) {
+  const ranked = cards.map(c => {
+    const { rate, matched } = effectiveRate(c, categoryId);
+    return { card: c, rate, matched };
+  }).sort((a, b) => b.rate - a.rate);
+  const pinnedId = pins[categoryId];
+  let top = ranked.find(r => r.card.id === pinnedId);
+  const isPinned = !!top;
+  if (!top) top = ranked[0];
+  return { ranked, top, isPinned };
+}
+
+// Paso 1 estilo "Pointers": lista de categorías, cada una ya muestra su mejor tarjeta y tasa.
+function renderPointerList() {
+  const wrap = $('#category-list');
+  if (!wrap || !cards.length) { if (wrap) wrap.innerHTML = ''; return; }
+  wrap.innerHTML = CATEGORIES.map(cat => {
+    const { top } = rankForCategory(cat.id);
+    return `
+    <button class="pointer-row${pendingCategory === cat.id ? ' active' : ''}" data-pointer-cat="${cat.id}">
+      <span class="pointer-icon">${cat.icon}</span>
+      <span class="pointer-info">
+        <span class="pointer-cat-name">${cat.label}</span>
+        <span class="pointer-card-name">${top.card.name}</span>
+      </span>
+      <span class="pointer-rate">${unitLabel(top.card, top.rate)}</span>
+      <span class="chevron">›</span>
+    </button>`;
+  }).join('');
+  $$('[data-pointer-cat]', wrap).forEach(row => row.addEventListener('click', () => {
+    const catId = row.dataset.pointerCat;
+    pendingCategory = catId;
     $('#merchant-input').value = '';
-    renderResult(pendingCategory);
-  });
+    renderPointerList();
+    renderResult(catId);
+    $('#result-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }));
 }
 
 function renderResult(categoryId) {
@@ -189,15 +214,7 @@ function renderResult(categoryId) {
     return;
   }
   const cat = CATEGORIES.find(c => c.id === categoryId);
-  const ranked = cards.map(c => {
-    const { rate, matched } = effectiveRate(c, categoryId);
-    return { card: c, rate, matched };
-  }).sort((a, b) => b.rate - a.rate);
-
-  const pinnedId = pins[categoryId];
-  let top = ranked.find(r => r.card.id === pinnedId);
-  const isPinned = !!top;
-  if (!top) top = ranked[0];
+  const { ranked, top, isPinned } = rankForCategory(categoryId);
   const rest = ranked.filter(r => r.card.id !== top.card.id);
 
   const catPromos = promosForCategory(categoryId);
@@ -212,7 +229,7 @@ function renderResult(categoryId) {
     ${promoHtml}
     <div class="spotlight" style="--g1:${topG[0]};--g2:${topG[1]}">
       <div class="spotlight-label">${isPinned ? `📌 Tu tarjeta fija para ${cat.icon} ${cat.label}` : `Usa esta para ${cat.icon} ${cat.label}`}</div>
-      <div class="spotlight-card">
+      <div class="spotlight-card" data-carddetail="${top.card.id}">
         <div class="spotlight-name">${top.card.name}</div>
         <div class="spotlight-rate">${unitLabel(top.card, top.rate)}</div>
       </div>
@@ -222,7 +239,7 @@ function renderResult(categoryId) {
     ${rest.length ? `<div class="rest-list">${rest.map(r => {
       const g = issuerGradient(r.card.issuer, r.card.gradient);
       return `
-      <div class="rest-row">
+      <div class="rest-row" data-carddetail="${r.card.id}">
         <div class="rest-swatch" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})"></div>
         <div class="rest-name">${r.card.name}</div>
         <div class="rest-rate">${unitLabel(r.card, r.rate)}</div>
@@ -230,22 +247,51 @@ function renderResult(categoryId) {
     }).join('')}</div>` : ''}
   `;
   const pinBtn = $('.pin-toggle', out);
-  if (pinBtn) pinBtn.addEventListener('click', () => {
+  if (pinBtn) pinBtn.addEventListener('click', e => {
+    e.stopPropagation();
     if (isPinned) delete pins[categoryId];
     else pins[categoryId] = top.card.id;
     savePins(pins);
     renderResult(categoryId);
   });
+  $$('[data-carddetail]', out).forEach(el => el.addEventListener('click', () => openCardDetailModal(el.dataset.carddetail)));
 }
+
+// Paso 3 estilo "Pointers": detalle completo de una tarjeta, en modal.
+function openCardDetailModal(cardId) {
+  const c = cards.find(x => x.id === cardId);
+  if (!c) return;
+  const g = issuerGradient(c.issuer, c.gradient);
+  const allTags = Object.entries(c.categories || {}).map(([k, v]) => {
+    const cat = CATEGORIES.find(x => x.id === k);
+    return cat && v > 0 ? `<span class="tag">${cat.icon} ${unitLabel(c, v)}</span>` : '';
+  }).join('') || `<span class="tag">Base ${unitLabel(c, c.base ?? 1)}</span>`;
+  const credits = c.credits || [];
+  const creditsHtml = credits.length
+    ? credits.map(cr => `<div class="credit-row"><span class="credit-label">${cr.label}</span><span class="credit-amount">$${cr.amount}/${cr.period === 'monthly' ? 'mes' : cr.period === 'quarterly' ? 'trim' : 'año'}${isCreditUsed(cr) ? ' · usado' : ''}</span></div>`).join('')
+    : `<p class="hint" style="padding:0">Sin créditos agregados.</p>`;
+  $('#carddetail-body').innerHTML = `
+    <div class="carddetail-hero" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})">
+      <div class="carddetail-name">${c.name}</div>
+      <div class="carddetail-issuer">${c.issuer || ''}${c.openedDate ? ' · desde ' + formatDateEs(c.openedDate) : ''}${c.business ? ' · negocio' : ''}</div>
+    </div>
+    <div class="mycard-cats" style="margin-top:14px">${allTags}</div>
+    <div class="detail-subhead">Anualidad</div>
+    <p class="hint" style="padding:0 0 6px">$${c.annualFee ?? 0}${c.openedDate ? ' · próxima renovación: ' + formatDateEs(nextAnniversary(c.openedDate)) : ''}</p>
+    <div class="detail-subhead">Créditos recurrentes</div>
+    <div class="credits-list">${creditsHtml}</div>
+  `;
+  $('#carddetail-modal-backdrop').classList.remove('hidden');
+}
+function closeCardDetailModal() { $('#carddetail-modal-backdrop').classList.add('hidden'); }
 
 function setupMerchantSearch() {
   const input = $('#merchant-input');
   input.addEventListener('input', () => {
     const guess = guessCategory(input.value);
-    $$('.chip').forEach(b => b.classList.toggle('active', b.dataset.cat === guess));
-    if (guess) { pendingCategory = guess; renderResult(guess); }
-    else if (!input.value.trim()) { renderResult(pendingCategory); }
-    else { $('#result-area').innerHTML = `<p class="hint">No reconozco ese comercio todavía — elige una categoría manualmente 👆</p>`; }
+    if (guess) { pendingCategory = guess; renderPointerList(); renderResult(guess); }
+    else if (!input.value.trim()) { renderPointerList(); renderResult(pendingCategory); }
+    else { $('#result-area').innerHTML = `<p class="hint">No reconozco ese comercio todavía — elige una categoría de la lista 👆</p>`; }
   });
 }
 
@@ -558,7 +604,6 @@ function resetCustomForm() {
 
 // ---------- Init ----------
 function init() {
-  renderCategoryChips();
   setupMerchantSearch();
   setupCustomForm();
   setupPromoForm();
@@ -578,6 +623,9 @@ function init() {
   $('#promo-modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closePromoModal(); });
   $('#promo-cancel').addEventListener('click', closePromoModal);
 
+  $('#carddetail-close').addEventListener('click', closeCardDetailModal);
+  $('#carddetail-modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeCardDetailModal(); });
+
   renderHome();
   renderCardsScreen();
   applyCategoryFromURL();
@@ -594,8 +642,5 @@ function applyCategoryFromURL() {
   if (!cat || !CATEGORIES.find(c => c.id === cat)) return;
   pendingCategory = cat;
   setTab('home');
-  const chip = $(`.chip[data-cat="${cat}"]`);
-  if (chip) { $$('.chip').forEach(b => b.classList.remove('active')); chip.classList.add('active'); }
-  renderResult(cat);
 }
 document.addEventListener('DOMContentLoaded', init);

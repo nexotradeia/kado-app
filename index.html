@@ -42,7 +42,7 @@
       <div id="promo-banner"></div>
       <h1 class="hero-title">¿Dónde vas a comprar?</h1>
       <input id="merchant-input" class="merchant-input" type="text" placeholder="Escribe una tienda… ej. Apple, Publix, Uber">
-      <div id="category-chips" class="chips"></div>
+      <div id="category-list" class="pointer-list"></div>
       <div id="result-area" class="result-area"></div>
     </div>
   </section>
@@ -130,6 +130,17 @@
         <button id="custom-save" class="btn-primary">Guardar tarjeta</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: detalle de tarjeta -->
+<div id="carddetail-modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Detalle de tarjeta</h2>
+      <button id="carddetail-close" class="icon-btn">✕</button>
+    </div>
+    <div id="carddetail-body"></div>
   </div>
 </div>
 
