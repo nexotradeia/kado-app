@@ -123,26 +123,48 @@ function setupMerchantSearch() {
 }
 
 // ---------- Mis tarjetas ----------
+function topStats(card, n = 2) {
+  return Object.entries(card.categories || {})
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([k, v]) => ({ cat: CATEGORIES.find(x => x.id === k), rate: v }))
+    .filter(s => s.cat);
+}
+
 function renderCardsScreen() {
   const list = $('#my-cards-list');
   if (!cards.length) {
-    list.innerHTML = `<p class="hint">Aún no tienes tarjetas. Toca "+ Agregar tarjeta" para empezar.</p>`;
+    list.innerHTML = `<p class="hint">Aún no tienes tarjetas. Toca "Agregar tarjeta" para empezar.</p>`;
     return;
   }
-  list.innerHTML = cards.map(c => `
-    <div class="mycard" style="--g1:${c.gradient?.[0] || '#6d28d9'};--g2:${c.gradient?.[1] || '#a78bfa'}">
-      <div class="mycard-top">
-        <div class="mycard-name">${c.name}</div>
-        <button class="icon-btn" data-del="${c.id}" title="Eliminar">✕</button>
-      </div>
-      <div class="mycard-issuer">${c.issuer || ''}</div>
-      <div class="mycard-cats">${Object.entries(c.categories || {}).map(([k, v]) => {
-        const cat = CATEGORIES.find(x => x.id === k);
-        return cat ? `<span class="tag">${cat.icon} ${unitLabel(c, v)}</span>` : '';
-      }).join('') || `<span class="tag">Base ${unitLabel(c, c.base ?? 1)}</span>`}</div>
+  list.innerHTML = cards.map(c => {
+    const stats = topStats(c, 2);
+    const statsHtml = stats.length
+      ? stats.map(s => `<div class="mycard-stat"><span class="mycard-stat-icon">${s.cat.icon}</span><span class="mycard-stat-rate">${unitLabel(c, s.rate)}</span></div>`).join('')
+      : `<div class="mycard-stat"><span class="mycard-stat-icon">💳</span><span class="mycard-stat-rate">${unitLabel(c, c.base ?? 1)}</span></div>`;
+    const allTags = Object.entries(c.categories || {}).map(([k, v]) => {
+      const cat = CATEGORIES.find(x => x.id === k);
+      return cat && v > 0 ? `<span class="tag">${cat.icon} ${unitLabel(c, v)}</span>` : '';
+    }).join('') || `<span class="tag">Base ${unitLabel(c, c.base ?? 1)}</span>`;
+    return `
+    <div class="mycard-row" data-toggle="${c.id}" style="--g1:${c.gradient?.[0] || '#6d28d9'};--g2:${c.gradient?.[1] || '#a78bfa'}">
+      <div class="mycard-row-name">${c.name}</div>
+      <div class="mycard-row-right">${statsHtml}<span class="chevron">›</span></div>
     </div>
-  `).join('');
-  $$('[data-del]', list).forEach(b => b.addEventListener('click', () => {
+    <div class="mycard-detail hidden" id="detail-${c.id}">
+      <div class="mycard-detail-issuer">${c.issuer || ''}${c.opened ? ' · desde ' + c.opened : ''}</div>
+      <div class="mycard-cats">${allTags}</div>
+      <button class="btn-secondary danger" data-del="${c.id}">Eliminar tarjeta</button>
+    </div>`;
+  }).join('');
+
+  $$('[data-toggle]', list).forEach(row => row.addEventListener('click', () => {
+    $(`#detail-${row.dataset.toggle}`).classList.toggle('hidden');
+    row.classList.toggle('open');
+  }));
+  $$('[data-del]', list).forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
     cards = cards.filter(c => c.id !== b.dataset.del);
     saveCards(cards);
     renderCardsScreen();
@@ -234,6 +256,7 @@ function init() {
   $$('.tab-btn').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
   $('#add-card-btn').addEventListener('click', openAddModal);
   $('#add-card-btn-2').addEventListener('click', openAddModal);
+  $('#add-card-btn-3').addEventListener('click', openAddModal);
   $('#modal-close').addEventListener('click', () => { closeAddModal(); resetCustomForm(); });
   $('#modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) { closeAddModal(); resetCustomForm(); } });
   $('#template-search').addEventListener('input', e => renderTemplatePicker(e.target.value));
