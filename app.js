@@ -4,9 +4,20 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const STORE_KEY = 'kado.cards.v1';
+const SEEDED_KEY = 'kado.seeded.v1';
 
 function loadCards() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { return []; }
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw) || [];
+    if (!localStorage.getItem(SEEDED_KEY)) {
+      localStorage.setItem(SEEDED_KEY, '1');
+      const seeded = MY_CARDS.map(c => ({ ...c }));
+      saveCards(seeded);
+      return seeded;
+    }
+    return [];
+  } catch { return []; }
 }
 function saveCards(cards) { localStorage.setItem(STORE_KEY, JSON.stringify(cards)); }
 

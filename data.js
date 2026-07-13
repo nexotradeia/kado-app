@@ -91,3 +91,44 @@ const CARD_TEMPLATES = [
   { id: 'discoverit', name: 'Discover it Cash Back', issuer: 'Discover', unit: '%', gradient: ['#ea580c', '#fb923c'],
     categories: {}, base: 1, rotating: true }
 ];
+
+// Tus tarjetas reales (de tu tracker de la regla 5/24). Se cargan solo la primera vez que abres la app
+// (si borras alguna, no vuelve a aparecer). Ajusta cualquiera desde "Mis tarjetas" si el nombre o la tasa no es exacta.
+const MY_CARDS = [
+  { id: 'my-boa1', name: 'Bank of America #1', issuer: 'Bank of America', opened: '10/28/2019',
+    unit: '%', gradient: ['#991b1b', '#f87171'], categories: {}, base: 1 },
+  { id: 'my-csp', name: 'Chase Sapphire Preferred', issuer: 'Chase', opened: 'Mayo 2022',
+    unit: 'x', gradient: ['#1e3a8a', '#3b82f6'], categories: { dining: 3, streaming: 3, travel: 2, online: 3 }, base: 1 },
+  { id: 'my-inkunlimited', name: 'Chase Ink Business Unlimited', issuer: 'Chase', opened: 'Febrero 2023',
+    unit: '%', gradient: ['#0f172a', '#334155'], categories: {}, base: 1.5 },
+  { id: 'my-freedom2023', name: 'Chase Freedom (revisar cuál exacta)', issuer: 'Chase', opened: 'Abril 2023',
+    unit: '%', gradient: ['#2563eb', '#60a5fa'], categories: { dining: 3, drugstore: 3 }, base: 1.5 },
+  { id: 'my-amex2020', name: 'Amex (revisar cuál exacta)', issuer: 'American Express', opened: '21-May-2020',
+    unit: 'x', gradient: ['#b45309', '#fbbf24'], categories: {}, base: 1 },
+  { id: 'my-boa2', name: 'Bank of America #2', issuer: 'Bank of America', opened: '7-May-2020',
+    unit: '%', gradient: ['#b91c1c', '#ef4444'], categories: {}, base: 1 },
+  { id: 'my-barclay', name: 'Barclay', issuer: 'Barclays', opened: '14-Sep-2017',
+    unit: '%', gradient: ['#334155', '#64748b'], categories: {}, base: 1 },
+  { id: 'my-gap', name: 'GAP Visa', issuer: 'GAP / Synchrony', opened: '11-Jun-2017',
+    unit: '%', gradient: ['#1f2937', '#4b5563'], categories: {}, base: 1 },
+  { id: 'my-victoria', name: "Victoria's Secret Angel Card", issuer: "Victoria's Secret / Comenity", opened: '5-Jan-2017',
+    unit: '%', gradient: ['#831843', '#ec4899'], categories: {}, base: 0 },
+  { id: 'my-chase2014', name: 'Chase (2014)', issuer: 'Chase', opened: '9-Jun-2014',
+    unit: 'x', gradient: ['#1e40af', '#60a5fa'], categories: {}, base: 1 },
+  { id: 'my-amexgold', name: 'Amex Gold', issuer: 'American Express', opened: '6-Nov-2023',
+    unit: 'x', gradient: ['#b45309', '#fbbf24'], categories: { dining: 4, groceries: 4, travel: 3 }, base: 1 },
+  { id: 'my-venture', name: 'Capital One Venture', issuer: 'Capital One', opened: '11-Mayo-2024',
+    unit: 'x', gradient: ['#4c1d95', '#a78bfa'], categories: {}, base: 2 },
+  { id: 'my-inkpreferred', name: 'Chase Ink Business Preferred', issuer: 'Chase', opened: 'Julio 2024',
+    unit: 'x', gradient: ['#0369a1', '#38bdf8'], categories: { travel: 3, online: 3 }, base: 1 },
+  { id: 'my-united', name: 'United MileagePlus Card', issuer: 'Chase', opened: 'Enero 2025',
+    unit: 'x', gradient: ['#1e3a8a', '#93c5fd'], categories: { travel: 2, dining: 2 }, base: 1 },
+  { id: 'my-applecard', name: 'Apple Card', issuer: 'Goldman Sachs', opened: 'Enero 2025',
+    unit: '%', gradient: ['#374151', '#9ca3af'], categories: { tech: 3, transit: 2 }, base: 1 },
+  { id: 'my-mastercard', name: 'Mastercard (revisar banco exacto)', issuer: '', opened: 'Julio 2022',
+    unit: '%', gradient: ['#78350f', '#f59e0b'], categories: {}, base: 1 },
+  { id: 'my-marriott', name: 'Marriott Bonvoy', issuer: 'Chase', opened: 'Noviembre 2025',
+    unit: 'x', gradient: ['#78350f', '#d97706'], categories: { dining: 2, groceries: 2, gas: 2, travel: 2 }, base: 1 },
+  { id: 'my-deltagold', name: 'Delta SkyMiles Gold Amex', issuer: 'American Express', opened: 'Febrero 2026',
+    unit: 'x', gradient: ['#7f1d1d', '#dc2626'], categories: { dining: 2, groceries: 2, travel: 2 }, base: 1 }
+];
