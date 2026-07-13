@@ -39,6 +39,7 @@
     </div>
 
     <div id="home-search-wrap" class="hidden">
+      <div id="promo-banner"></div>
       <h1 class="hero-title">¿Dónde vas a comprar?</h1>
       <input id="merchant-input" class="merchant-input" type="text" placeholder="Escribe una tienda… ej. Apple, Publix, Uber">
       <div id="category-chips" class="chips"></div>
@@ -54,6 +55,13 @@
     </div>
     <div id="my-cards-list" class="my-cards-list"></div>
     <button id="add-card-btn-3" class="btn-primary full add-card-bottom">💳 Agregar tarjeta</button>
+
+    <div class="section-head" style="margin-top:28px">
+      <h1 class="hero-title small">Promociones</h1>
+      <button id="add-promo-btn" class="btn-primary small">+ Agregar</button>
+    </div>
+    <p class="hint" style="padding-top:0">Cuando actives una oferta en la app de tu banco (Amex Offers, Chase Offers, etc.) anótala aquí para que Kādo te la recuerde.</p>
+    <div id="promo-list" class="my-cards-list"></div>
   </section>
 
   <!-- RESUMEN -->
@@ -121,6 +129,28 @@
         <button id="custom-cancel" class="btn-secondary">Cancelar</button>
         <button id="custom-save" class="btn-primary">Guardar tarjeta</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: agregar promoción -->
+<div id="promo-modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Agregar promoción</h2>
+      <button id="promo-modal-close" class="icon-btn">✕</button>
+    </div>
+    <label class="field-label">Tarjeta</label>
+    <select id="promo-card" class="text-input"></select>
+    <label class="field-label">Categoría (opcional)</label>
+    <select id="promo-cat" class="text-input"></select>
+    <label class="field-label">Descripción</label>
+    <input id="promo-desc" class="text-input" type="text" placeholder="ej. 10% cashback en Publix">
+    <label class="field-label">Vence</label>
+    <input id="promo-expires" class="text-input" type="date">
+    <div class="field-row">
+      <button id="promo-cancel" class="btn-secondary">Cancelar</button>
+      <button id="promo-save" class="btn-primary">Guardar promo</button>
     </div>
   </div>
 </div>

@@ -49,10 +49,28 @@ const PINS_KEY = 'kado.pins.v1';
 function loadPins() { try { return JSON.parse(localStorage.getItem(PINS_KEY)) || {}; } catch { return {}; } }
 function savePins(pins) { localStorage.setItem(PINS_KEY, JSON.stringify(pins)); }
 
+const PROMOS_KEY = 'kado.promos.v1';
+function loadPromos() { try { return JSON.parse(localStorage.getItem(PROMOS_KEY)) || []; } catch { return []; } }
+function savePromos(list) { localStorage.setItem(PROMOS_KEY, JSON.stringify(list)); }
+
 let cards = loadCards();
 let pins = loadPins();
+let promos = loadPromos();
 let activeTab = 'home';
 let pendingCategory = null;
+
+// ---------- Promociones (agregadas manualmente, ej. Amex Offers / Chase Offers activadas) ----------
+function daysUntil(iso) {
+  if (!iso) return null;
+  return Math.ceil((new Date(iso) - new Date(todayISO())) / 86400000);
+}
+function activePromos() {
+  const today = todayISO();
+  return promos.filter(p => !p.expires || p.expires >= today);
+}
+function promosForCategory(categoryId) {
+  return activePromos().filter(p => (!p.categoryId || p.categoryId === categoryId) && cards.some(c => c.id === p.cardId));
+}
 
 function uid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
@@ -130,7 +148,21 @@ function renderHome() {
   }
   empty.classList.add('hidden');
   searchWrap.classList.remove('hidden');
+  renderPromoBanner();
   renderResult(pendingCategory);
+}
+
+// Banner de promos que vencen pronto (7 días o menos), sin importar la categoría elegida.
+function renderPromoBanner() {
+  const banner = $('#promo-banner');
+  if (!banner) return;
+  const soon = activePromos().filter(p => cards.some(c => c.id === p.cardId) && daysUntil(p.expires) !== null && daysUntil(p.expires) <= 7);
+  if (!soon.length) { banner.innerHTML = ''; return; }
+  banner.innerHTML = `<div class="promo-alert">${soon.map(p => {
+    const card = cards.find(c => c.id === p.cardId);
+    const d = daysUntil(p.expires);
+    return `<div class="promo-alert-row">🔥 <b>${p.description}</b>${card ? ' · ' + card.name : ''} — ${d <= 0 ? 'vence hoy' : `vence en ${d} día${d === 1 ? '' : 's'}`}</div>`;
+  }).join('')}</div>`;
 }
 
 function renderCategoryChips() {
@@ -168,8 +200,16 @@ function renderResult(categoryId) {
   if (!top) top = ranked[0];
   const rest = ranked.filter(r => r.card.id !== top.card.id);
 
+  const catPromos = promosForCategory(categoryId);
+  const promoHtml = catPromos.length ? `<div class="promo-callout">${catPromos.map(p => {
+    const card = cards.find(c => c.id === p.cardId);
+    const d = daysUntil(p.expires);
+    return `<div class="promo-callout-row">🔥 <b>${card.name}</b>: ${p.description}${p.expires ? ` <span class="promo-expiry">(vence ${d <= 0 ? 'hoy' : 'en ' + d + 'd'})</span>` : ''}</div>`;
+  }).join('')}</div>` : '';
+
   const topG = issuerGradient(top.card.issuer, top.card.gradient);
   out.innerHTML = `
+    ${promoHtml}
     <div class="spotlight" style="--g1:${topG[0]};--g2:${topG[1]}">
       <div class="spotlight-label">${isPinned ? `📌 Tu tarjeta fija para ${cat.icon} ${cat.label}` : `Usa esta para ${cat.icon} ${cat.label}`}</div>
       <div class="spotlight-card">
@@ -321,6 +361,61 @@ function renderCardsScreen() {
       $(`#detail-${cardId}`, list)?.classList.remove('hidden');
     }
   }));
+
+  renderPromoList();
+}
+
+// ---------- Promociones: lista y gestión ----------
+function renderPromoList() {
+  const list = $('#promo-list');
+  if (!list) return;
+  if (!promos.length) { list.innerHTML = `<p class="hint">Sin promociones agregadas todavía.</p>`; return; }
+  list.innerHTML = promos.map(p => {
+    const card = cards.find(c => c.id === p.cardId);
+    const cat = CATEGORIES.find(c => c.id === p.categoryId);
+    const expired = p.expires && p.expires < todayISO();
+    return `
+    <div class="promo-row${expired ? ' expired' : ''}">
+      <div class="promo-row-info">
+        <div class="promo-row-desc">${p.description}</div>
+        <div class="promo-row-meta">${card ? card.name : 'Tarjeta eliminada'}${cat ? ' · ' + cat.icon + ' ' + cat.label : ''}${p.expires ? ' · vence ' + formatDateEs(p.expires) : ''}${expired ? ' · vencida' : ''}</div>
+      </div>
+      <button class="icon-btn tiny" data-promo-del="${p.id}">✕</button>
+    </div>`;
+  }).join('');
+  $$('[data-promo-del]', list).forEach(b => b.addEventListener('click', () => {
+    promos = promos.filter(p => p.id !== b.dataset.promoDel);
+    savePromos(promos);
+    renderPromoList();
+    renderPromoBanner();
+    renderResult(pendingCategory);
+  }));
+}
+
+function openPromoModal() {
+  if (!cards.length) return;
+  $('#promo-card').innerHTML = cards.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  $('#promo-cat').innerHTML = `<option value="">Cualquier categoría</option>` + CATEGORIES.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+  $('#promo-desc').value = '';
+  $('#promo-expires').value = '';
+  $('#promo-modal-backdrop').classList.remove('hidden');
+}
+function closePromoModal() { $('#promo-modal-backdrop').classList.add('hidden'); }
+
+function setupPromoForm() {
+  $('#promo-save').addEventListener('click', () => {
+    const cardId = $('#promo-card').value;
+    const categoryId = $('#promo-cat').value;
+    const description = $('#promo-desc').value.trim();
+    const expires = $('#promo-expires').value || null;
+    if (!cardId || !description) { $('#promo-desc').focus(); return; }
+    promos.push({ id: uid(), cardId, categoryId, description, expires });
+    savePromos(promos);
+    closePromoModal();
+    renderPromoList();
+    renderPromoBanner();
+    renderResult(pendingCategory);
+  });
 }
 
 // ---------- Resumen ----------
@@ -466,6 +561,7 @@ function init() {
   renderCategoryChips();
   setupMerchantSearch();
   setupCustomForm();
+  setupPromoForm();
 
   $$('.tab-btn').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
   $('#add-card-btn').addEventListener('click', openAddModal);
@@ -476,6 +572,11 @@ function init() {
   $('#template-search').addEventListener('input', e => renderTemplatePicker(e.target.value));
   $('#show-custom-btn').addEventListener('click', openCustomForm);
   $('#custom-cancel').addEventListener('click', resetCustomForm);
+
+  $('#add-promo-btn').addEventListener('click', openPromoModal);
+  $('#promo-modal-close').addEventListener('click', closePromoModal);
+  $('#promo-modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closePromoModal(); });
+  $('#promo-cancel').addEventListener('click', closePromoModal);
 
   renderHome();
   renderCardsScreen();
