@@ -1,4 +1,4 @@
-const CACHE = 'kado-v1';
+const CACHE = 'kado-v2';
 const FILES = ['index.html', 'styles.css', 'app.js', 'data.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {

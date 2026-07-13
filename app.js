@@ -6,11 +6,19 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const STORE_KEY = 'kado.cards.v1';
 const SEEDED_KEY = 'kado.seeded.v1';
 
+// IDs cuyo nombre/issuer/categorías se corrigieron en data.js después de la carga inicial —
+// se re-aplican desde la plantilla semilla aunque ya existan en localStorage.
+const RENAME_ON_MIGRATE = ['my-freedom2023', 'my-amex2020', 'my-mastercard'];
+
 // Rellena campos nuevos (fecha, anualidad, créditos) en tarjetas guardadas antes de que existieran.
 function migrateCard(c) {
   const seedMatch = MY_CARDS.find(m => m.id === c.id);
+  const renamed = (seedMatch && RENAME_ON_MIGRATE.includes(c.id))
+    ? { name: seedMatch.name, issuer: seedMatch.issuer, categories: seedMatch.categories, base: seedMatch.base, gradient: seedMatch.gradient, unit: seedMatch.unit }
+    : {};
   return {
     ...c,
+    ...renamed,
     openedDate: c.openedDate ?? seedMatch?.openedDate ?? null,
     annualFee: c.annualFee ?? seedMatch?.annualFee ?? 0,
     credits: c.credits ?? seedMatch?.credits ?? [],
