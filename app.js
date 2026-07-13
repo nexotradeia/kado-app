@@ -22,8 +22,20 @@ function migrateCard(c) {
     openedDate: c.openedDate ?? seedMatch?.openedDate ?? null,
     annualFee: c.annualFee ?? seedMatch?.annualFee ?? 0,
     credits: c.credits ?? seedMatch?.credits ?? [],
-    business: c.business ?? seedMatch?.business ?? false
+    business: c.business ?? seedMatch?.business ?? false,
+    network: c.network ?? seedMatch?.network ?? null,
+    rewardsPoints: c.rewardsPoints ?? seedMatch?.rewardsPoints ?? null,
+    rewardsUpdated: c.rewardsUpdated ?? seedMatch?.rewardsUpdated ?? null
   };
+}
+
+// Logo de la red de pago (Visa/Mastercard/Amex/Discover), dibujado en HTML/CSS — no requiere descargar imágenes.
+function networkBadgeHTML(network) {
+  if (network === 'visa') return `<span class="net-badge net-visa">VISA</span>`;
+  if (network === 'mastercard') return `<span class="net-badge net-mastercard"><span class="mc-c mc-red"></span><span class="mc-c mc-yellow"></span></span>`;
+  if (network === 'amex') return `<span class="net-badge net-amex">AMEX</span>`;
+  if (network === 'discover') return `<span class="net-badge net-discover">DISCOVER</span>`;
+  return '';
 }
 
 function loadCards() {
@@ -73,6 +85,13 @@ function promosForCategory(categoryId) {
 }
 
 function uid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// Últimos 4 dígitos "falsos" pero estables para el número enmascarado de la tarjeta visual (derivados del id).
+function fakeLast4(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return String(h % 10000).padStart(4, '0');
+}
 
 function effectiveRate(card, categoryId) {
   if (categoryId && card.categories && card.categories[categoryId] != null) {
@@ -230,7 +249,7 @@ function renderResult(categoryId) {
     <div class="spotlight" style="--g1:${topG[0]};--g2:${topG[1]}">
       <div class="spotlight-label">${isPinned ? `📌 Tu tarjeta fija para ${cat.icon} ${cat.label}` : `Usa esta para ${cat.icon} ${cat.label}`}</div>
       <div class="spotlight-card" data-carddetail="${top.card.id}">
-        <div class="spotlight-name">${top.card.name}</div>
+        <div class="spotlight-name">${top.card.name} ${networkBadgeHTML(top.card.network)}</div>
         <div class="spotlight-rate">${unitLabel(top.card, top.rate)}</div>
       </div>
       <div class="spotlight-why">${top.matched ? `Da ${unitLabel(top.card, top.rate)} en ${cat.label.toLowerCase()}` : `Tasa base (sin categoría especial aquí)`}${top.card.rotating ? ' · revisa si la categoría rotativa está activa este trimestre ⚠️' : ''}</div>
@@ -270,18 +289,88 @@ function openCardDetailModal(cardId) {
   const creditsHtml = credits.length
     ? credits.map(cr => `<div class="credit-row"><span class="credit-label">${cr.label}</span><span class="credit-amount">$${cr.amount}/${cr.period === 'monthly' ? 'mes' : cr.period === 'quarterly' ? 'trim' : 'año'}${isCreditUsed(cr) ? ' · usado' : ''}</span></div>`).join('')
     : `<p class="hint" style="padding:0">Sin créditos agregados.</p>`;
+  const visualStyle = c.photo
+    ? `background-image:url(${c.photo});background-size:cover;background-position:center`
+    : `background:linear-gradient(135deg, ${g[0]}, ${g[1]})`;
   $('#carddetail-body').innerHTML = `
-    <div class="carddetail-hero" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})">
-      <div class="carddetail-name">${c.name}</div>
-      <div class="carddetail-issuer">${c.issuer || ''}${c.openedDate ? ' · desde ' + formatDateEs(c.openedDate) : ''}${c.business ? ' · negocio' : ''}</div>
+    <div class="card-visual${c.photo ? ' has-photo' : ''}" style="${visualStyle}">
+      <div class="card-visual-top">
+        <div class="card-chip"></div>
+        <div class="card-visual-network">${networkBadgeHTML(c.network) || '<span class="net-badge net-generic">💳</span>'}</div>
+      </div>
+      <div class="card-visual-number">•••• •••• •••• ${fakeLast4(c.id)}</div>
+      <div class="card-visual-bottom">
+        <div class="card-visual-name">${c.name}</div>
+        <div class="card-visual-issuer">${c.issuer || ''}${c.openedDate ? ' · desde ' + formatDateEs(c.openedDate) : ''}${c.business ? ' · negocio' : ''}</div>
+      </div>
+    </div>
+    <div class="photo-actions">
+      <label class="btn-secondary tiny" for="carddetail-photo-input">📷 ${c.photo ? 'Cambiar foto' : 'Subir foto real'}</label>
+      <input type="file" accept="image/*" id="carddetail-photo-input" class="hidden">
+      ${c.photo ? `<button class="btn-secondary tiny" id="carddetail-photo-remove">Quitar foto</button>` : ''}
     </div>
     <div class="mycard-cats" style="margin-top:14px">${allTags}</div>
+    <div class="detail-subhead">Red de pago</div>
+    <select class="text-input tiny" id="carddetail-network" data-network="${c.id}">
+      <option value="" ${!c.network ? 'selected' : ''}>Sin logo / no sé</option>
+      <option value="visa" ${c.network === 'visa' ? 'selected' : ''}>Visa</option>
+      <option value="mastercard" ${c.network === 'mastercard' ? 'selected' : ''}>Mastercard</option>
+      <option value="amex" ${c.network === 'amex' ? 'selected' : ''}>American Express</option>
+      <option value="discover" ${c.network === 'discover' ? 'selected' : ''}>Discover</option>
+      <option value="store" ${c.network === 'store' ? 'selected' : ''}>Tarjeta de tienda (sin red)</option>
+    </select>
     <div class="detail-subhead">Anualidad</div>
     <p class="hint" style="padding:0 0 6px">$${c.annualFee ?? 0}${c.openedDate ? ' · próxima renovación: ' + formatDateEs(nextAnniversary(c.openedDate)) : ''}</p>
     <div class="detail-subhead">Créditos recurrentes</div>
     <div class="credits-list">${creditsHtml}</div>
   `;
+  $('#carddetail-network').addEventListener('change', e => {
+    c.network = e.target.value || null;
+    saveCards(cards);
+    renderCardsScreen();
+    renderResult(pendingCategory);
+    openCardDetailModal(cardId);
+  });
+  $('#carddetail-photo-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeImageToDataURL(file, 640, 0.85).then(dataUrl => {
+      c.photo = dataUrl;
+      saveCards(cards);
+      renderCardsScreen();
+      renderResult(pendingCategory);
+      openCardDetailModal(cardId);
+    });
+  });
+  const removeBtn = $('#carddetail-photo-remove');
+  if (removeBtn) removeBtn.addEventListener('click', () => {
+    delete c.photo;
+    saveCards(cards);
+    renderCardsScreen();
+    renderResult(pendingCategory);
+    openCardDetailModal(cardId);
+  });
   $('#carddetail-modal-backdrop').classList.remove('hidden');
+}
+
+// Comprime y redimensiona la foto subida antes de guardarla en localStorage (que tiene límite de tamaño).
+function resizeImageToDataURL(file, maxWidth, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 function closeCardDetailModal() { $('#carddetail-modal-backdrop').classList.add('hidden'); }
 
@@ -330,14 +419,24 @@ function renderCardsScreen() {
         <button class="icon-btn tiny" data-credit-del="${c.id}|${cr.id}">✕</button>
       </label>
     `).join('');
+    const thumbStyle = c.photo
+      ? `background-image:url(${c.photo})`
+      : `background:linear-gradient(135deg, ${g[0]}, ${g[1]})`;
     return `
     <div class="mycard-row" data-toggle="${c.id}" style="--g1:${g[0]};--g2:${g[1]}">
-      <div class="mycard-row-name">${c.name}</div>
+      <div class="mycard-thumb" style="${thumbStyle}"></div>
+      <div class="mycard-row-name">${c.name} ${networkBadgeHTML(c.network)}${c.rewardsPoints ? `<div class="mycard-row-rewards">${c.rewardsPoints.toLocaleString('es')} pts</div>` : ''}</div>
       <div class="mycard-row-right">${statsHtml}<span class="chevron">›</span></div>
     </div>
     <div class="mycard-detail hidden" id="detail-${c.id}">
       <div class="mycard-detail-issuer">${c.issuer || ''}${c.openedDate ? ' · desde ' + formatDateEs(c.openedDate) : ''}${c.business ? ' · negocio (no cuenta 5/24)' : ''}</div>
       <div class="mycard-cats">${allTags}</div>
+
+      <div class="detail-subhead">Rewards / puntos actuales</div>
+      <div class="fee-row">
+        <input type="number" min="0" class="fee-input" data-rewards="${c.id}" placeholder="0" value="${c.rewardsPoints ?? ''}">
+        ${c.rewardsUpdated ? `<span class="fee-next">actualizado: ${formatDateEs(c.rewardsUpdated)}</span>` : `<span class="fee-next">actualízalo tú desde el app del banco</span>`}
+      </div>
 
       <div class="detail-subhead">Anualidad</div>
       <div class="fee-row">
@@ -375,6 +474,16 @@ function renderCardsScreen() {
   $$('[data-fee]', list).forEach(inp => inp.addEventListener('change', () => {
     const card = cards.find(c => c.id === inp.dataset.fee);
     if (card) { card.annualFee = parseFloat(inp.value) || 0; saveCards(cards); }
+  }));
+  $$('[data-rewards]', list).forEach(inp => inp.addEventListener('change', () => {
+    const card = cards.find(c => c.id === inp.dataset.rewards);
+    if (card) {
+      const v = parseFloat(inp.value);
+      card.rewardsPoints = v > 0 ? v : null;
+      card.rewardsUpdated = card.rewardsPoints ? todayISO() : null;
+      saveCards(cards);
+      renderCardsScreen();
+    }
   }));
   $$('[data-credit-toggle]', list).forEach(cb => cb.addEventListener('change', () => {
     const [cardId, creditId] = cb.dataset.creditToggle.split('|');
@@ -468,6 +577,7 @@ function setupPromoForm() {
 function renderSummaryScreen() {
   if (!cards.length) {
     $('#summary-tiles').innerHTML = '';
+    $('#summary-rewards').innerHTML = '';
     $('#summary-524').innerHTML = '';
     $('#summary-renewals').innerHTML = '';
     $('#summary-credits').innerHTML = `<p class="hint">Agrega tarjetas para ver tu resumen.</p>`;
@@ -486,6 +596,17 @@ function renderSummaryScreen() {
     <div class="stat-tile"><div class="stat-num">$${totalFees}</div><div class="stat-label">Anualidades/año</div></div>
     <div class="stat-tile"><div class="stat-num">${status524.count}/5</div><div class="stat-label">Regla 5/24</div></div>
     <div class="stat-tile"><div class="stat-num">$${Math.round(availableValue)}</div><div class="stat-label">Créditos/mes disp.</div></div>
+  `;
+
+  const rewardCards = cards.filter(c => c.rewardsPoints);
+  $('#summary-rewards').innerHTML = `
+    <div class="detail-subhead">Rewards / puntos (actualizados a mano)</div>
+    ${rewardCards.length ? `<div class="rest-list">${rewardCards.map(c => `
+      <div class="rest-row">
+        <div class="rest-name">${c.name}${c.rewardsUpdated ? ` <span style="color:var(--text-dim);font-weight:500">· ${formatDateEs(c.rewardsUpdated)}</span>` : ''}</div>
+        <div class="rest-rate">${c.rewardsPoints.toLocaleString('es')} pts</div>
+      </div>
+    `).join('')}</div>` : '<p class="hint">Anota tus puntos desde "Mis tarjetas" → abre una tarjeta → Rewards.</p>'}
   `;
 
   $('#summary-524').innerHTML = `
@@ -546,7 +667,7 @@ function renderTemplatePicker(query) {
   $$('[data-tpl]', wrap).forEach(b => b.addEventListener('click', () => {
     if (b.disabled) return;
     const t = CARD_TEMPLATES.find(x => x.id === b.dataset.tpl);
-    cards.push({ id: uid(), templateId: t.id, name: t.name, issuer: t.issuer, unit: t.unit,
+    cards.push({ id: uid(), templateId: t.id, name: t.name, issuer: t.issuer, unit: t.unit, network: t.network || null,
       gradient: t.gradient, categories: { ...t.categories }, base: t.base, rotating: !!t.rotating,
       openedDate: todayISO(), annualFee: 0, credits: [] });
     saveCards(cards);
