@@ -93,8 +93,9 @@ function renderResult(categoryId) {
   const top = ranked[0];
   const rest = ranked.slice(1);
 
+  const topG = issuerGradient(top.card.issuer, top.card.gradient);
   out.innerHTML = `
-    <div class="spotlight" style="--g1:${top.card.gradient?.[0] || '#6d28d9'};--g2:${top.card.gradient?.[1] || '#a78bfa'}">
+    <div class="spotlight" style="--g1:${topG[0]};--g2:${topG[1]}">
       <div class="spotlight-label">Usa esta para ${cat.icon} ${cat.label}</div>
       <div class="spotlight-card">
         <div class="spotlight-name">${top.card.name}</div>
@@ -102,12 +103,15 @@ function renderResult(categoryId) {
       </div>
       <div class="spotlight-why">${top.matched ? `Da ${unitLabel(top.card, top.rate)} en ${cat.label.toLowerCase()}` : `Tasa base (sin categoría especial aquí)`}${top.card.rotating ? ' · revisa si la categoría rotativa está activa este trimestre ⚠️' : ''}</div>
     </div>
-    ${rest.length ? `<div class="rest-list">${rest.map(r => `
+    ${rest.length ? `<div class="rest-list">${rest.map(r => {
+      const g = issuerGradient(r.card.issuer, r.card.gradient);
+      return `
       <div class="rest-row">
-        <div class="rest-swatch" style="background:linear-gradient(135deg, ${r.card.gradient?.[0] || '#333'}, ${r.card.gradient?.[1] || '#666'})"></div>
+        <div class="rest-swatch" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})"></div>
         <div class="rest-name">${r.card.name}</div>
         <div class="rest-rate">${unitLabel(r.card, r.rate)}</div>
-      </div>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('')}</div>` : ''}
   `;
 }
 
@@ -147,8 +151,9 @@ function renderCardsScreen() {
       const cat = CATEGORIES.find(x => x.id === k);
       return cat && v > 0 ? `<span class="tag">${cat.icon} ${unitLabel(c, v)}</span>` : '';
     }).join('') || `<span class="tag">Base ${unitLabel(c, c.base ?? 1)}</span>`;
+    const g = issuerGradient(c.issuer, c.gradient);
     return `
-    <div class="mycard-row" data-toggle="${c.id}" style="--g1:${c.gradient?.[0] || '#6d28d9'};--g2:${c.gradient?.[1] || '#a78bfa'}">
+    <div class="mycard-row" data-toggle="${c.id}" style="--g1:${g[0]};--g2:${g[1]}">
       <div class="mycard-row-name">${c.name}</div>
       <div class="mycard-row-right">${statsHtml}<span class="chevron">›</span></div>
     </div>
@@ -185,13 +190,16 @@ function renderTemplatePicker(query) {
   const already = new Set(cards.map(c => c.templateId).filter(Boolean));
   const filtered = CARD_TEMPLATES.filter(t => t.name.toLowerCase().includes(q) || t.issuer.toLowerCase().includes(q));
   const wrap = $('#template-list');
-  wrap.innerHTML = filtered.map(t => `
+  wrap.innerHTML = filtered.map(t => {
+    const g = issuerGradient(t.issuer, t.gradient);
+    return `
     <button class="tpl-row" data-tpl="${t.id}" ${already.has(t.id) ? 'disabled' : ''}>
-      <span class="tpl-swatch" style="background:linear-gradient(135deg, ${t.gradient[0]}, ${t.gradient[1]})"></span>
+      <span class="tpl-swatch" style="background:linear-gradient(135deg, ${g[0]}, ${g[1]})"></span>
       <span class="tpl-info"><b>${t.name}</b><small>${t.issuer}</small></span>
       <span class="tpl-add">${already.has(t.id) ? 'Agregada' : '+'}</span>
     </button>
-  `).join('') || `<p class="hint">Ninguna coincide — puedes crear una tarjeta personalizada abajo.</p>`;
+  `;
+  }).join('') || `<p class="hint">Ninguna coincide — puedes crear una tarjeta personalizada abajo.</p>`;
 
   $$('[data-tpl]', wrap).forEach(b => b.addEventListener('click', () => {
     if (b.disabled) return;
@@ -230,8 +238,9 @@ function setupCustomForm() {
       if (v > 0) categories[inp.dataset.cat] = v;
     });
     const palette = [['#6d28d9', '#a78bfa'], ['#0369a1', '#38bdf8'], ['#b45309', '#fbbf24'], ['#991b1b', '#f87171'], ['#166534', '#4ade80']];
-    const gradient = palette[cards.length % palette.length];
-    cards.push({ id: uid(), name, issuer: $('#custom-issuer').value.trim(), unit, gradient, categories, base });
+    const issuer = $('#custom-issuer').value.trim();
+    const gradient = matchIssuerColor(issuer) || palette[cards.length % palette.length];
+    cards.push({ id: uid(), name, issuer, unit, gradient, categories, base });
     saveCards(cards);
     closeAddModal();
     resetCustomForm();

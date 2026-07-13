@@ -2,6 +2,45 @@
 //  Kādo — datos: categorías, comercios conocidos y plantillas de tarjetas
 // =====================================================
 
+// Color fijo por banco — todas las tarjetas del mismo emisor comparten gradiente.
+const ISSUER_COLORS = {
+  'chase': ['#1d4ed8', '#3b82f6'],
+  'american express': ['#b45309', '#fbbf24'],
+  'amex': ['#b45309', '#fbbf24'],
+  'capital one': ['#7c2d12', '#f97316'],
+  'bank of america': ['#991b1b', '#f87171'],
+  'bofa': ['#991b1b', '#f87171'],
+  'citi': ['#0f766e', '#2dd4bf'],
+  'wells fargo': ['#a16207', '#facc15'],
+  'discover': ['#ea580c', '#fb923c'],
+  'barclays': ['#1e3a8a', '#64748b'],
+  'barclay': ['#1e3a8a', '#64748b'],
+  'goldman sachs': ['#374151', '#9ca3af'],
+  'synchrony': ['#4b5563', '#9ca3af'],
+  'gap': ['#4b5563', '#9ca3af'],
+  'target': ['#b91c1c', '#ef4444'],
+  "victoria's secret": ['#831843', '#ec4899'],
+  'us bank': ['#075985', '#38bdf8'],
+  'marriott': ['#78350f', '#d97706'],
+  'delta': ['#7f1d1d', '#dc2626'],
+  'united': ['#1e3a8a', '#93c5fd']
+};
+
+// Busca el color del banco; null si no lo reconoce.
+function matchIssuerColor(issuer) {
+  const key = (issuer || '').trim().toLowerCase();
+  if (!key) return null;
+  for (const k in ISSUER_COLORS) {
+    if (key.includes(k)) return ISSUER_COLORS[k];
+  }
+  return null;
+}
+
+// Devuelve el gradiente del banco si lo reconoce; si no, usa el guardado en la tarjeta o gris por defecto.
+function issuerGradient(issuer, fallback) {
+  return matchIssuerColor(issuer) || fallback || ['#4b5563', '#9ca3af'];
+}
+
 const CATEGORIES = [
   { id: 'dining',     label: 'Restaurantes',      icon: '🍽️' },
   { id: 'groceries',  label: 'Supermercado',      icon: '🛒' },
