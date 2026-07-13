@@ -4,11 +4,12 @@
   "description": "Kādo te dice qué tarjeta de crédito usar en cada compra para maximizar tus puntos y cashback.",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0b0714",
-  "theme_color": "#0b0714",
+  "background_color": "#150c3a",
+  "theme_color": "#150c3a",
   "orientation": "portrait",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
   ]
 }

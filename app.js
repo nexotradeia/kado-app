@@ -16,16 +16,19 @@ function migrateCard(c) {
   const renamed = (seedMatch && RENAME_ON_MIGRATE.includes(c.id))
     ? { name: seedMatch.name, issuer: seedMatch.issuer, categories: seedMatch.categories, base: seedMatch.base, gradient: seedMatch.gradient, unit: seedMatch.unit }
     : {};
+  // Los créditos reales investigados solo se aplican si nunca agregaste ninguno tú misma (array vacío).
+  const creditsBackfill = (!c.credits || !c.credits.length) && seedMatch?.credits?.length ? seedMatch.credits : c.credits;
   return {
     ...c,
     ...renamed,
     openedDate: c.openedDate ?? seedMatch?.openedDate ?? null,
     annualFee: c.annualFee ?? seedMatch?.annualFee ?? 0,
-    credits: c.credits ?? seedMatch?.credits ?? [],
+    credits: creditsBackfill ?? [],
     business: c.business ?? seedMatch?.business ?? false,
     network: c.network ?? seedMatch?.network ?? null,
     rewardsPoints: c.rewardsPoints ?? seedMatch?.rewardsPoints ?? null,
-    rewardsUpdated: c.rewardsUpdated ?? seedMatch?.rewardsUpdated ?? null
+    rewardsUpdated: c.rewardsUpdated ?? seedMatch?.rewardsUpdated ?? null,
+    perks: c.perks ?? seedMatch?.perks ?? []
   };
 }
 
@@ -204,9 +207,14 @@ function renderPointerList() {
   if (!wrap || !cards.length) { if (wrap) wrap.innerHTML = ''; return; }
   wrap.innerHTML = CATEGORIES.map(cat => {
     const { top } = rankForCategory(cat.id);
+    const g = issuerGradient(top.card.issuer, top.card.gradient);
+    const thumbStyle = top.card.photo
+      ? `background-image:url(${top.card.photo})`
+      : `background:linear-gradient(135deg, ${g[0]}, ${g[1]})`;
     return `
     <button class="pointer-row${pendingCategory === cat.id ? ' active' : ''}" data-pointer-cat="${cat.id}">
       <span class="pointer-icon">${cat.icon}</span>
+      <span class="pointer-thumb" style="${thumbStyle}"></span>
       <span class="pointer-info">
         <span class="pointer-cat-name">${cat.label}</span>
         <span class="pointer-card-name">${top.card.name}</span>
@@ -323,6 +331,9 @@ function openCardDetailModal(cardId) {
     <p class="hint" style="padding:0 0 6px">$${c.annualFee ?? 0}${c.openedDate ? ' · próxima renovación: ' + formatDateEs(nextAnniversary(c.openedDate)) : ''}</p>
     <div class="detail-subhead">Créditos recurrentes</div>
     <div class="credits-list">${creditsHtml}</div>
+    ${(c.perks || []).length ? `
+    <div class="detail-subhead">Beneficios</div>
+    <ul class="perks-list">${c.perks.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
   `;
   $('#carddetail-network').addEventListener('change', e => {
     c.network = e.target.value || null;
@@ -456,6 +467,10 @@ function renderCardsScreen() {
         </select>
         <button class="btn-secondary tiny" data-newcredit-add="${c.id}">+</button>
       </div>
+
+      ${(c.perks || []).length ? `
+      <div class="detail-subhead">Beneficios</div>
+      <ul class="perks-list">${c.perks.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
 
       <button class="btn-secondary danger" data-del="${c.id}">Eliminar tarjeta</button>
     </div>`;

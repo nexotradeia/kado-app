@@ -1,5 +1,5 @@
-const CACHE = 'kado-v9';
-const FILES = ['index.html', 'styles.css', 'app.js', 'data.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'kado-v16';
+const FILES = ['index.html', 'styles.css', 'app.js', 'data.js', 'manifest.json', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
