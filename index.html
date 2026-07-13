@@ -56,11 +56,21 @@
     <button id="add-card-btn-3" class="btn-primary full add-card-bottom">💳 Agregar tarjeta</button>
   </section>
 
+  <!-- RESUMEN -->
+  <section id="screen-summary" class="screen">
+    <h1 class="hero-title small">Resumen</h1>
+    <div id="summary-tiles" class="summary-tiles"></div>
+    <div id="summary-524" class="summary-block"></div>
+    <div id="summary-renewals" class="summary-block"></div>
+    <div id="summary-credits" class="summary-block"></div>
+  </section>
+
 </main>
 
 <nav class="tabbar">
   <button class="tab-btn active" data-tab="home"><span class="tab-icon">✨</span>Inicio</button>
   <button class="tab-btn" data-tab="cards"><span class="tab-icon">💳</span>Tarjetas</button>
+  <button class="tab-btn" data-tab="summary"><span class="tab-icon">📊</span>Resumen</button>
 </nav>
 
 <!-- MODAL: agregar tarjeta -->
@@ -93,6 +103,16 @@
         <div>
           <label class="field-label">Tasa base</label>
           <input id="custom-base" class="text-input" type="number" min="0" step="0.5" value="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Fecha de apertura</label>
+          <input id="custom-opened" class="text-input" type="date">
+        </div>
+        <div>
+          <label class="field-label">Anualidad ($)</label>
+          <input id="custom-fee" class="text-input" type="number" min="0" step="1" value="0">
         </div>
       </div>
       <label class="field-label">Categorías con bonus (deja en 0 si no aplica)</label>
