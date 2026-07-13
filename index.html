@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Kādo — tu tarjeta perfecta</title>
+<meta name="theme-color" content="#0b0714">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kādo">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app-bg"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="icon.svg" alt="" class="brand-icon">
+    <span class="brand-name">Kādo</span>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- HOME -->
+  <section id="screen-home" class="screen active">
+    <div id="home-empty" class="empty-state hidden">
+      <div class="empty-emoji">💳</div>
+      <h2>Agrega tu primera tarjeta</h2>
+      <p>Elige de tarjetas populares o crea la tuya, y Kādo te dirá siempre cuál usar.</p>
+      <button id="add-card-btn-2" class="btn-primary">+ Agregar tarjeta</button>
+    </div>
+
+    <div id="home-search-wrap" class="hidden">
+      <h1 class="hero-title">¿Dónde vas a comprar?</h1>
+      <input id="merchant-input" class="merchant-input" type="text" placeholder="Escribe una tienda… ej. Apple, Publix, Uber">
+      <div id="category-chips" class="chips"></div>
+      <div id="result-area" class="result-area"></div>
+    </div>
+  </section>
+
+  <!-- MIS TARJETAS -->
+  <section id="screen-cards" class="screen">
+    <div class="section-head">
+      <h1 class="hero-title small">Mis tarjetas</h1>
+      <button id="add-card-btn" class="btn-primary small">+ Agregar</button>
+    </div>
+    <div id="my-cards-list" class="my-cards-list"></div>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-tab="home"><span class="tab-icon">✨</span>Inicio</button>
+  <button class="tab-btn" data-tab="cards"><span class="tab-icon">💳</span>Tarjetas</button>
+</nav>
+
+<!-- MODAL: agregar tarjeta -->
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Agregar tarjeta</h2>
+      <button id="modal-close" class="icon-btn">✕</button>
+    </div>
+
+    <div id="template-picker">
+      <input id="template-search" class="merchant-input" type="text" placeholder="Busca tu tarjeta… ej. Chase, Amex">
+      <div id="template-list" class="template-list"></div>
+      <button id="show-custom-btn" class="btn-secondary">Mi tarjeta no está aquí — crear personalizada</button>
+    </div>
+
+    <div id="custom-form" class="custom-form hidden">
+      <label class="field-label">Nombre de la tarjeta</label>
+      <input id="custom-name" class="text-input" type="text" placeholder="ej. Mi Visa Signature">
+      <label class="field-label">Banco (opcional)</label>
+      <input id="custom-issuer" class="text-input" type="text" placeholder="ej. BBVA">
+      <div class="field-row">
+        <div>
+          <label class="field-label">Tipo</label>
+          <select id="custom-unit" class="text-input">
+            <option value="%">Cashback (%)</option>
+            <option value="x">Puntos/Millas (x)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Tasa base</label>
+          <input id="custom-base" class="text-input" type="number" min="0" step="0.5" value="1">
+        </div>
+      </div>
+      <label class="field-label">Categorías con bonus (deja en 0 si no aplica)</label>
+      <div id="custom-cats" class="custom-cats"></div>
+      <div class="field-row">
+        <button id="custom-cancel" class="btn-secondary">Cancelar</button>
+        <button id="custom-save" class="btn-primary">Guardar tarjeta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "Kādo — tu tarjeta perfecta",
+  "short_name": "Kādo",
+  "description": "Kādo te dice qué tarjeta de crédito usar en cada compra para maximizar tus puntos y cashback.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0714",
+  "theme_color": "#0b0714",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
